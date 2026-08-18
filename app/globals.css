@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #faf6f0;
+  color: #1c1a17;
+}
+
+.hotspot {
+  position: absolute;
+  border: 2px dashed transparent;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.hotspot:hover {
+  border-color: #b6472f;
+  background-color: rgba(182, 71, 47, 0.08);
+}

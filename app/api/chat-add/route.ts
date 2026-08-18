@@ -1,0 +1,45 @@
+import { NextResponse } from "next/server";
+import { search } from "../../../lib/providers/productProvider";
+import { Slot } from "../../../lib/types";
+
+const SLOT_KEYWORDS: Record<Slot, string[]> = {
+  bag: ["bag", "tote", "purse", "clutch", "crossbody", "handbag"],
+  scarf: ["scarf", "dupatta", "stole"],
+  shoes: ["shoes", "heels", "sandals", "boots", "loafers", "juttis", "flats", "footwear"],
+  top: ["top", "blouse", "shirt", "kurti", "kurta", "sweater", "turtleneck"],
+  bottom: ["trousers", "pants", "skirt", "palazzo", "shorts", "bottom"],
+  dress: ["dress", "saree", "gown", "anarkali"],
+  outerwear: ["jacket", "blazer", "coat", "outerwear"],
+  jewelry: ["necklace", "earrings", "jewelry", "jewellery", "bracelet", "choker"],
+  belt: ["belt"],
+  headwear: ["hat", "cap", "fedora", "beanie", "headwear"],
+};
+
+function detectSlot(message: string): Slot | undefined {
+  const lower = message.toLowerCase();
+  for (const [slot, keywords] of Object.entries(SLOT_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) return slot as Slot;
+  }
+  return undefined;
+}
+
+function detectMaxPrice(message: string): number | undefined {
+  const match = message.match(/(?:under|below|less than)\s*\$?(\d+(?:\.\d+)?)/i);
+  return match ? Number(match[1]) : undefined;
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const message: string = body.message ?? "";
+
+  const slot = detectSlot(message);
+  const maxPrice = detectMaxPrice(message);
+  const products = await search(message, { slot, maxPrice, limit: 5 });
+
+  const reply =
+    products.length > 0
+      ? `Found ${products.length} option${products.length > 1 ? "s" : ""} for "${message}" — tap one to add it.`
+      : `I couldn't find a match for "${message}" in the catalog yet — try describing the item differently (e.g. category, color, or a price limit like "under $50").`;
+
+  return NextResponse.json({ reply, products });
+}
