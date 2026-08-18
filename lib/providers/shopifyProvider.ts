@@ -77,7 +77,7 @@ async function fetchFromStore(
   limit: number
 ): Promise<Product[]> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await fetch(`https://${store.domain}/api/2024-10/graphql.json`, {

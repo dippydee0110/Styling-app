@@ -83,7 +83,7 @@ export async function searchGoogleShopping(
   if (!apiKey || !query.trim()) return [];
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const params = new URLSearchParams({
