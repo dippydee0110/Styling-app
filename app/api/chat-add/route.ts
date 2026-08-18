@@ -1,27 +1,6 @@
 import { NextResponse } from "next/server";
 import { search } from "../../../lib/providers/productProvider";
-import { Slot } from "../../../lib/types";
-
-const SLOT_KEYWORDS: Record<Slot, string[]> = {
-  bag: ["bag", "tote", "purse", "clutch", "crossbody", "handbag"],
-  scarf: ["scarf", "dupatta", "stole"],
-  shoes: ["shoes", "heels", "sandals", "boots", "loafers", "juttis", "flats", "footwear"],
-  top: ["top", "blouse", "shirt", "kurti", "kurta", "sweater", "turtleneck"],
-  bottom: ["trousers", "pants", "skirt", "palazzo", "shorts", "bottom"],
-  dress: ["dress", "saree", "gown", "anarkali"],
-  outerwear: ["jacket", "blazer", "coat", "outerwear"],
-  jewelry: ["necklace", "earrings", "jewelry", "jewellery", "bracelet", "choker"],
-  belt: ["belt"],
-  headwear: ["hat", "cap", "fedora", "beanie", "headwear"],
-};
-
-function detectSlot(message: string): Slot | undefined {
-  const lower = message.toLowerCase();
-  for (const [slot, keywords] of Object.entries(SLOT_KEYWORDS)) {
-    if (keywords.some((kw) => lower.includes(kw))) return slot as Slot;
-  }
-  return undefined;
-}
+import { inferSlot } from "../../../lib/slotKeywords";
 
 function detectMaxPrice(message: string): number | undefined {
   const match = message.match(/(?:under|below|less than)\s*\$?(\d+(?:\.\d+)?)/i);
@@ -32,7 +11,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const message: string = body.message ?? "";
 
-  const slot = detectSlot(message);
+  const slot = inferSlot(message);
   const maxPrice = detectMaxPrice(message);
   const products = await search(message, { slot, maxPrice, limit: 5 });
 
