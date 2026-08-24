@@ -38,7 +38,11 @@ export default function Home() {
       const res = await fetch("/api/generate-model", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, cartItems: nextCartItems }),
+        body: JSON.stringify({
+          profile,
+          cartItems: nextCartItems,
+          previousImageUrl: generatedModel?.imageUrl,
+        }),
       });
       const data = await res.json();
       setGeneratedModel(data.model);

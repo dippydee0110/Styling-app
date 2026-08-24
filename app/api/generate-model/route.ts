@@ -13,7 +13,8 @@ export async function POST(request: Request) {
     cartItems = defaults.map((product) => ({ ...product, quantity: 1 }));
   }
 
-  const model = await generateModel(profile, cartItems);
+  const previousImageUrl: string | undefined = body.previousImageUrl;
+  const model = await generateModel(profile, cartItems, previousImageUrl);
 
   return NextResponse.json({ model, cartItems });
 }

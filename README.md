@@ -6,7 +6,7 @@ Swap pieces by clicking the model, remove them the same way, add more via a chat
 shopping + shipping totals update live. Checkout splits the cart by merchant with a delivery
 estimate for each.
 
-## Status: real inventory sources wired in, image + checkout still mocked
+## Status: real inventory + real image generation wired in, checkout still mocked
 
 - **Product inventory** — **live** by default whenever you configure keys: real Google Shopping
   results via SerpApi (`lib/providers/googleShoppingProvider.ts`) and real in-stock products +
@@ -14,16 +14,38 @@ estimate for each.
   (`lib/providers/shopifyProvider.ts`, real Storefront API calls). The ~50-item seed catalog
   (`data/catalog.json`) always fills in alongside them, so search/alternatives/chat-add never go
   empty even with zero keys set.
-- **AI model image** — still a deterministic SVG "model card" rendered locally, colored per worn
-  item. No image-gen key set yet.
+- **AI model image** — **live by default, no key needed**: real photorealistic generation via the
+  free, no-signup Pollinations.ai API (`lib/providers/pollinationsProvider.ts`), used automatically.
+  A seed derived from your style profile keeps the model looking like the same person across
+  outfit swaps, though this is a softer consistency guarantee than the Gemini path below — it's a
+  free community service with no reliability/quality SLA. Set `GEMINI_API_KEY` (needs a billed
+  Google account) for better photorealism and true identity-lock: it feeds the *previous* photo
+  back in and asks Gemini to edit only the outfit, so the same face/pose/background carries over
+  exactly. Falls back further to a deterministic SVG "model card" only if both real paths fail.
 - **Checkout** — still a simulated per-merchant order confirmation flow. No mature,
   generally-available "agentic commerce" standard exists for placing real orders across arbitrary
   independent merchants, so this mirrors the shape a real one would have.
 
 Each of these lives behind a provider interface in `lib/providers/`, so turning on a real source is
 one environment variable — no UI or business-logic changes needed. See `.env.example` for the
-exact variables and the `TODO(real provider)` comment in `imageProvider.ts` for the image-gen
-request shapes (OpenAI/Gemini/Stability).
+exact variables.
+
+### AI model image — already live, no setup needed
+
+Click "Generate My Look" and you already get a real photorealistic photo (via Pollinations.ai) —
+nothing to configure. For higher quality and stronger identity consistency across outfit swaps:
+
+1. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). **Note:** Gemini's
+   image-generation models require a billed Google account — the free tier covers text models, but
+   returns a quota-limit-0 error for image models specifically. Cost is typically a few cents per
+   image once billing is enabled.
+2. Set `GEMINI_API_KEY` in `.env.local`, restart `npm run dev`. Gemini is then tried first, with
+   Pollinations as the automatic fallback if a Gemini call ever fails.
+
+Note: generated people are always synthetic/fictional, built from whatever characteristics you
+describe in plain text — not a real person. Image generation policies (what's allowed in prompts,
+content filters) vary by provider and can change; if a generation is blocked or fails, the app
+silently falls back down the chain (Gemini → Pollinations → SVG mock) rather than erroring.
 
 ### Getting real inventory showing
 
@@ -85,7 +107,8 @@ data/catalog.json    Seed product catalog
 | --- | --- | --- |
 | Online product search | `SERPAPI_KEY` | **Live** — real Google Shopping results via `lib/providers/googleShoppingProvider.ts` |
 | Local store inventory / pickup | `SHOPIFY_STORES` | **Live** — real Shopify Storefront API calls via `lib/providers/shopifyProvider.ts` |
-| Image generation | `IMAGE_PROVIDER_API_KEY` | Mock — implement the `generateReal` fetch call in `lib/providers/imageProvider.ts` (request shapes for OpenAI/Gemini/Stability are commented in place) |
+| Image generation (default) | *(none)* | **Live** — free, no-key photorealistic photos via Pollinations.ai, `lib/providers/pollinationsProvider.ts` |
+| Image generation (upgrade) | `GEMINI_API_KEY` | **Live** (needs a billed Google account — image models aren't on the free tier) — higher-quality photos + true identity-lock via Gemini's native image model, `lib/providers/imageProvider.ts` |
 | Checkout | `CHECKOUT_PROVIDER_API_KEY` | Mock — replace `placeOrders` in `lib/providers/checkoutProvider.ts` with real per-merchant order calls once an agentic-commerce API is available, or wire Stripe (see below) |
 
 ### Checkout — Stripe
