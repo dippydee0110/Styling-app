@@ -39,8 +39,12 @@ export async function generatePollinationsImage(
     prompt
   )}?width=768&height=1024&seed=${seed}&nologo=true&model=flux`;
 
+  // Pollinations' free anonymous tier is genuinely slow (measured 25-40s for
+  // a single clean request, no queuing) — this timeout has real margin above
+  // that so a normal-but-slow generation doesn't get cut off and silently
+  // fall through to the SVG mock.
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45000);
+  const timeout = setTimeout(() => controller.abort(), 60000);
 
   try {
     const res = await fetch(url, { signal: controller.signal });

@@ -152,6 +152,7 @@ export default function Home() {
           <ModelCanvas
             model={generatedModel}
             cartItems={cartItems}
+            isGenerating={isGenerating}
             onSlotClick={handleSlotClick}
             onRemoveSlot={handleRemoveSlot}
           />
