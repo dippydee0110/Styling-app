@@ -1,160 +1,182 @@
+<div align="center">
+
 # AI Styling Studio
 
-Describe yourself and your styling needs in plain English — body type, height/weight, ethnicity,
-characteristics, preferences, occasion — and get an AI-generated model wearing a shoppable outfit.
-Swap pieces by clicking the model, remove them the same way, add more via a chat box, and watch
-shopping + shipping totals update live. Checkout splits the cart by merchant with a delivery
-estimate for each.
+**Describe yourself in plain English. Watch an AI model wear your outfit. Shop it for real.**
 
-## Status: real inventory + real image generation wired in, checkout still mocked
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38bdf8)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey)](#license)
 
-- **Product inventory** — **live** by default whenever you configure keys: real Google Shopping
-  results via SerpApi (`lib/providers/googleShoppingProvider.ts`) and real in-stock products +
-  local-pickup listings from any Shopify store you configure
-  (`lib/providers/shopifyProvider.ts`, real Storefront API calls). The ~50-item seed catalog
-  (`data/catalog.json`) always fills in alongside them, so search/alternatives/chat-add never go
-  empty even with zero keys set.
-- **AI model image** — **live by default, no key needed**: real photorealistic generation via the
-  free, no-signup Pollinations.ai API (`lib/providers/pollinationsProvider.ts`), used automatically.
-  A seed derived from your style profile keeps the model looking like the same person across
-  outfit swaps, though this is a softer consistency guarantee than the Gemini path below — it's a
-  free community service with no reliability/quality SLA. Set `GEMINI_API_KEY` (needs a billed
-  Google account) for better photorealism and true identity-lock: it feeds the *previous* photo
-  back in and asks Gemini to edit only the outfit, so the same face/pose/background carries over
-  exactly. Falls back further to a deterministic SVG "model card" only if both real paths fail.
-- **Checkout** — still a simulated per-merchant order confirmation flow. No mature,
-  generally-available "agentic commerce" standard exists for placing real orders across arbitrary
-  independent merchants, so this mirrors the shape a real one would have.
+</div>
 
-Each of these lives behind a provider interface in `lib/providers/`, so turning on a real source is
-one environment variable — no UI or business-logic changes needed. See `.env.example` for the
-exact variables.
+<br/>
 
-### AI model image — already live, no setup needed
+<table>
+<tr>
+<td width="42%" valign="top">
 
-Click "Generate My Look" and you already get a real photorealistic photo (via Pollinations.ai) —
-nothing to configure. For higher quality and stronger identity consistency across outfit swaps:
+<img src="docs/demo-model.jpeg" alt="AI-generated photorealistic styling model" width="100%" />
 
-1. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). **Note:** Gemini's
-   image-generation models require a billed Google account — the free tier covers text models, but
-   returns a quota-limit-0 error for image models specifically. Cost is typically a few cents per
-   image once billing is enabled.
-2. Set `GEMINI_API_KEY` in `.env.local`, restart `npm run dev`. Gemini is then tried first, with
-   Pollinations as the automatic fallback if a Gemini call ever fails.
+<sub><i>Real output — generated from the text description on the right, free tier, zero setup.</i></sub>
 
-Note: generated people are always synthetic/fictional, built from whatever characteristics you
-describe in plain text — not a real person. Image generation policies (what's allowed in prompts,
-content filters) vary by provider and can change; if a generation is blocked or fails, the app
-silently falls back down the chain (Gemini → Pollinations → SVG mock) rather than erroring.
+</td>
+<td width="58%" valign="top">
 
-**Important limitation — this is not virtual try-on.** The model isn't wearing the literal product
-photos from your cart; the image model re-draws each garment from its real name, description, and
-tags (`lib/outfitPromptDescription.ts` feeds in the actual retailer text, e.g. "Slim genuine leather
-belt with brushed gold buckle, black") so the result resembles the real product closely, but it's
-still a generated interpretation, not a pixel-accurate composite of the product photo onto the
-model. True virtual try-on (grafting the exact product image onto a body photorealistically) needs a
-specialized model (e.g. IDM-VTON via fal.ai/Replicate) — those aren't free and weren't wired in; ask
-if you want that path instead.
+### Type this:
 
-### Getting real inventory showing
+> *"I'm a 5'6" curvy South Asian woman, warm brown skin, long dark hair. I love earthy tones and tailored, modest fits. Need a look for a client-facing office day."*
 
-1. **Google Shopping (online products)** — sign up at [serpapi.com](https://serpapi.com/) (has a
-   free tier), copy your API key, and set `SERPAPI_KEY` in `.env.local`. Every search, chat-add,
-   and "find similar" call will now include live Google Shopping results, ranked first.
-2. **Local store inventory + pickup (Shopify)** — there's no public API that searches "nearby
-   stores" in general; the only real, public way to get genuine per-store stock is a specific
-   store's own Shopify Storefront API. If you (or a local boutique you're integrating) run a
-   Shopify store: Shopify Admin → Settings → Apps and sales channels → Develop apps → create an
-   app → give it the **Storefront API** scope only → install → copy the Storefront access token.
-   Then set `SHOPIFY_STORES` in `.env.local` to a JSON array, e.g.
-   ```
-   SHOPIFY_STORES=[{"name":"Studio Verve","domain":"studio-verve.myshopify.com","token":"<token>","region":"Bengaluru"}]
-   ```
-   You can list multiple stores. Only in-stock (`availableForSale`) products are shown, with
-   `shippingCost: 0` and same-day delivery, framed as local pickup.
-3. Restart `npm run dev` after editing `.env.local` (Next.js only reads env files at startup).
+### Get this:
 
-## Getting started
+- A **real, photorealistic AI model** built to match — not a cartoon avatar
+- Dressed in a **complete outfit pulled from real inventory** — Shopify stores, Google Shopping, or the built-in catalog
+- Every piece **priced with real shipping**, grouped by merchant, running total live in the sidebar
+- **Click any item on the model** to swap it for an alternative, or remove it — the model regenerates wearing the new pick
+- **Type anything** — *"add a red belt under $30"* — and it shows up as an option to add
+- **Save the whole look**, rename it, come back to it later
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+## Why this exists
+
+Most "AI stylist" demos stop at a chatbot describing an outfit. This one closes the loop: it generates
+an actual photo of a model built from your description, sources the pieces from real, live product data,
+keeps a running shopping cart with real shipping costs, and prepares checkout split by merchant with a
+delivery estimate for each — the way a real multi-retailer purchase would actually work.
+
+## What's real right now
+
+| Capability | Status | How |
+| --- | --- | --- |
+| AI model photo | **Live, zero setup** | Free photorealistic generation via [Pollinations.ai](https://pollinations.ai) — no key needed |
+| AI model photo (upgrade) | Optional | Higher fidelity + true identity-lock across swaps via Gemini, if you add a billed `GEMINI_API_KEY` |
+| Online product search | **Live** with a free key | Real Google Shopping results via [SerpApi](https://serpapi.com/) |
+| Local store inventory | **Live** with your store | Real in-stock products + local pickup via the Shopify Storefront API |
+| Seed catalog fallback | **Always on** | ~50-item catalog fills in so results are never empty, even with no keys set |
+| Checkout | Simulated | Per-merchant order summary + delivery estimate; no agentic-commerce standard exists yet to place real multi-merchant orders |
+
+Every integration lives behind a swappable provider in `lib/providers/` — turning on a real source is one
+environment variable, never a code change. Full setup steps for each are below.
+
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) and click **Generate My Look** — no API keys required
+for the core experience.
 
 ## How it works
 
-1. **Describe yourself** in the free-text box (`components/StyleIntakeForm.tsx`) — body type,
-   measurements, ethnicity, preferences, occasion, region, anything you'd mention to a stylist.
-2. Click **Generate My Look** — `/api/generate-model` picks a starter outfit that matches keywords
-   in your description (office / ethnic / evening / casual templates in
-   `lib/providers/productProvider.ts`) and renders the model.
-3. **Click any highlighted item on the model** to open alternatives for that slot and swap it, or
-   click the **×** that appears to remove it.
-4. **Add anything via chat** — type e.g. "add a red belt under $30"; a lightweight keyword/price
-   parser (`app/api/chat-add/route.ts`) matches it against the catalog.
-5. The **cart sidebar** groups items by merchant and keeps subtotal / shipping / grand total live
-   as you add, swap, or remove pieces.
-6. **Checkout** shows the cart split per merchant with subtotal, shipping, and an estimated
-   delivery date, then "places" a simulated order per merchant.
+1. **Describe yourself** — body type, measurements, ethnicity, characteristics, style preferences, and
+   the occasion, all in one free-text box, exactly like you'd brief a real stylist.
+2. **Generate My Look** — the app picks a starter outfit matching your description and renders a
+   photorealistic model wearing it.
+3. **Click any item on the model** to see shoppable alternatives for that slot, or hit the **×** to
+   remove it — the model regenerates wearing the change, keeping the same face/pose/background.
+4. **Add anything via chat** — *"show me a wool scarf"* or *"add a red belt under $30"* — matched
+   against live inventory and the catalog.
+5. **Watch the cart** — grouped by merchant, subtotal/shipping/grand total update on every change.
+6. **Save the look** — name it, revisit it later, or delete it.
+7. **Checkout** — see the order split per merchant with an estimated delivery date for each.
+
+## Setting up real data sources
+
+<details>
+<summary><b>Real online product search (Google Shopping)</b></summary>
+
+<br/>
+
+Sign up at [serpapi.com](https://serpapi.com/) (free tier available), copy your API key, and set:
+
+```
+SERPAPI_KEY=your-key-here
+```
+
+in `.env.local`. Every search, chat-add, and "find similar" call now includes live Google Shopping
+results, ranked first.
+
+</details>
+
+<details>
+<summary><b>Real local store inventory + pickup (Shopify)</b></summary>
+
+<br/>
+
+There's no public API that searches "nearby stores" in general — the only real, public way to get
+genuine per-store stock is a specific store's own Shopify Storefront API. If you (or a local boutique
+you're integrating) run a Shopify store:
+
+1. Shopify Admin → Settings → Apps and sales channels → Develop apps → create an app
+2. Give it the **Storefront API** scope only, install it, copy the access token
+3. Set in `.env.local`:
+
+```
+SHOPIFY_STORES=[{"name":"Studio Verve","domain":"studio-verve.myshopify.com","token":"<token>","region":"Bengaluru"}]
+```
+
+List multiple stores in the same array. Only in-stock products are shown, framed as free local pickup.
+
+</details>
+
+<details>
+<summary><b>Higher-fidelity AI model photos (Gemini upgrade, optional)</b></summary>
+
+<br/>
+
+The default (Pollinations) is already free and live — this is only for higher photorealism and a
+true identity-lock across outfit swaps (it re-edits the *same* photo instead of regenerating fresh).
+
+1. Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). **Note:** Gemini's
+   image models require a billed Google account — the free tier doesn't cover image generation, only
+   text. Cost is typically a few cents per image.
+2. Set `GEMINI_API_KEY` in `.env.local`. Gemini is then tried first, with Pollinations as the automatic
+   fallback if a call ever fails.
+
+</details>
+
+Restart `npm run dev` after editing `.env.local` — Next.js only reads env files at startup.
+
+## Honest limitations
+
+- **Not virtual try-on.** The model doesn't wear the literal product photos — the image model re-draws
+  each garment from its real name, description, and color/material tags, which gets close but isn't a
+  pixel-accurate composite. True virtual try-on needs a specialized model (e.g. IDM-VTON) and isn't free.
+- **Pollinations is a free community service**, not an SLA-backed API — generation can take up to a
+  minute and identity consistency across swaps is a soft guarantee (a stable seed), not a hard lock.
+  The Gemini upgrade path fixes both.
+- **Checkout is simulated.** No mature, generally-available standard exists yet for placing real orders
+  across arbitrary independent merchants in one flow. The cart-splitting and delivery-estimate logic is
+  real and ready to wire into Stripe (Checkout Sessions or Connect, depending on who the seller of
+  record is) once you decide which model fits.
+
+## Tech stack
+
+- **Next.js 15** (App Router) + **React 18** + **TypeScript**
+- **Tailwind CSS** for styling
+- **Zustand** for state, persisted to `localStorage`
+- No database — product/image/checkout providers are swappable modules under `lib/providers/`
 
 ## Project structure
 
 ```
-app/                 Next.js App Router pages + API routes
-components/          UI components (intake form, model canvas, cart, chat, checkout)
-lib/providers/       imageProvider, productProvider, checkoutProvider (mock, swap-ready)
-lib/store/           Zustand store (profile, cart, generated model, chat)
-lib/types.ts         Shared TypeScript types
-data/catalog.json    Seed product catalog
+app/                      Next.js App Router pages + API routes
+components/                UI components (intake form, model canvas, cart, chat, checkout, saved looks)
+lib/providers/              image, product, checkout providers — mock by default, swap-ready
+lib/store/                  Zustand store (profile, cart, generated model, chat, saved looks)
+lib/types.ts                 Shared TypeScript types
+data/catalog.json            Seed product catalog
+docs/                         README assets
 ```
 
-## Going from mock to real
+## License
 
-| Provider | Env var | Status |
-| --- | --- | --- |
-| Online product search | `SERPAPI_KEY` | **Live** — real Google Shopping results via `lib/providers/googleShoppingProvider.ts` |
-| Local store inventory / pickup | `SHOPIFY_STORES` | **Live** — real Shopify Storefront API calls via `lib/providers/shopifyProvider.ts` |
-| Image generation (default) | *(none)* | **Live** — free, no-key photorealistic photos via Pollinations.ai, `lib/providers/pollinationsProvider.ts` |
-| Image generation (upgrade) | `GEMINI_API_KEY` | **Live** (needs a billed Google account — image models aren't on the free tier) — higher-quality photos + true identity-lock via Gemini's native image model, `lib/providers/imageProvider.ts` |
-| Checkout | `CHECKOUT_PROVIDER_API_KEY` | Mock — replace `placeOrders` in `lib/providers/checkoutProvider.ts` with real per-merchant order calls once an agentic-commerce API is available, or wire Stripe (see below) |
-
-### Checkout — Stripe
-
-There are two realistic paths, and which one applies depends on what these "shopkeepers" actually
-are to you:
-
-- **You're the seller of record** (e.g. you personally fulfill/forward these orders, or this is
-  your own aggregated storefront): use plain **Stripe Checkout Sessions** — one session per
-  merchant group, all paid into your own Stripe account. This is a day of work: create a Checkout
-  Session per `MerchantGroup` from `lib/cartMath.ts` inside `placeOrders`, redirect the browser to
-  each session's URL (or open them in sequence), and confirm via a webhook.
-- **These are real independent businesses who should each get paid directly**: that needs
-  **Stripe Connect** — each merchant onboards their own Connect account through you first (a
-  compliance/business relationship, not just an API call), and `placeOrders` creates a destination
-  charge or transfer per merchant. Only pursue this if you actually have real merchant
-  relationships to onboard.
-Tell me which applies and I'll wire the actual `placeOrders` implementation.
-
-## Publishing to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: AI Styling Studio"
-```
-
-Then either install the [GitHub CLI](https://cli.github.com/) and run:
-
-```bash
-gh repo create ai-styling-app --public --source=. --remote=origin --push
-```
-
-...or create an empty public repo on github.com and run:
-
-```bash
-git remote add origin https://github.com/<your-username>/ai-styling-app.git
-git branch -M main
-git push -u origin main
-```
+MIT
