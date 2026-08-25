@@ -2,6 +2,7 @@ import { CartItem, GeneratedModel, Slot, StyleProfile } from "../types";
 import { SLOT_REGIONS, VIEWBOX } from "../slotLayout";
 import { toDataUri } from "../placeholderImage";
 import { generatePollinationsImage } from "./pollinationsProvider";
+import { describeOutfitForPrompt } from "../outfitPromptDescription";
 
 const SKIN_TONES = ["#8d5a3c", "#c68a5f", "#e0b088", "#f2cfa0", "#f6e2c8"];
 
@@ -67,13 +68,6 @@ function summarize(profile: StyleProfile, wornBySlot: Partial<Record<Slot, CartI
   return `Styled${occasionPart} with ${pieces.join(", ")}.`;
 }
 
-function describeOutfit(wornBySlot: Partial<Record<Slot, CartItem>>): string {
-  const pieces = Object.values(wornBySlot)
-    .filter((item): item is CartItem => Boolean(item))
-    .map((item) => item.name);
-  return pieces.length > 0 ? pieces.join(", ") : "a simple, stylish everyday outfit";
-}
-
 /** Parses a `data:<mime>;base64,<data>` URI. Returns null for non-data URIs
  * or the SVG mock placeholder (not usable as a photo reference). */
 function parsePhotoDataUri(url: string | undefined): { mimeType: string; data: string } | null {
@@ -106,14 +100,17 @@ async function generateReal(
   if (!apiKey) return null;
 
   const model = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
-  const outfitDescription = describeOutfit(wornBySlot);
+  const outfitDescription = describeOutfitForPrompt(wornBySlot);
   const referencePhoto = parsePhotoDataUri(previousImageUrl);
 
+  const fidelityNote =
+    "Render each garment/accessory as closely as possible to its exact stated color, material, cut, and silhouette — these are real products, not generic placeholders.";
+
   const prompt = referencePhoto
-    ? `Using the attached reference photo, keep the exact same person completely unchanged — same face, body, pose, hairstyle, skin tone, and background. Only change their outfit so they are now wearing: ${outfitDescription}. Photorealistic professional fashion photography, polished Instagram-influencer style, high detail, no text or watermark.`
+    ? `Using the attached reference photo, keep the exact same person completely unchanged — same face, body, pose, hairstyle, skin tone, and background. Only change their outfit so they are now wearing: ${outfitDescription}. ${fidelityNote} Photorealistic professional fashion photography, polished Instagram-influencer style, high detail, no text or watermark.`
     : `Ultra-realistic professional fashion photography of a person, styled like a polished Instagram fashion/style influencer. Person: ${
         profile.freeText || "a stylish adult model"
-      }.${profile.occasion ? ` Styled for: ${profile.occasion}.` : ""} They are wearing: ${outfitDescription}. Full-body vertical portrait, soft natural studio lighting, shallow depth of field, confident editorial pose, clean minimal neutral background, photorealistic skin texture, high detail, no text, no watermark, no logos.`;
+      }.${profile.occasion ? ` Styled for: ${profile.occasion}.` : ""} They are wearing: ${outfitDescription}. ${fidelityNote} Full-body vertical portrait, soft natural studio lighting, shallow depth of field, confident editorial pose, clean minimal neutral background, photorealistic skin texture, high detail, no text, no watermark, no logos.`;
 
   const parts: GeminiPart[] = [];
   if (referencePhoto) parts.push({ inlineData: referencePhoto });

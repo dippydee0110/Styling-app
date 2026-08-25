@@ -47,6 +47,15 @@ describe in plain text — not a real person. Image generation policies (what's 
 content filters) vary by provider and can change; if a generation is blocked or fails, the app
 silently falls back down the chain (Gemini → Pollinations → SVG mock) rather than erroring.
 
+**Important limitation — this is not virtual try-on.** The model isn't wearing the literal product
+photos from your cart; the image model re-draws each garment from its real name, description, and
+tags (`lib/outfitPromptDescription.ts` feeds in the actual retailer text, e.g. "Slim genuine leather
+belt with brushed gold buckle, black") so the result resembles the real product closely, but it's
+still a generated interpretation, not a pixel-accurate composite of the product photo onto the
+model. True virtual try-on (grafting the exact product image onto a body photorealistically) needs a
+specialized model (e.g. IDM-VTON via fal.ai/Replicate) — those aren't free and weren't wired in; ask
+if you want that path instead.
+
 ### Getting real inventory showing
 
 1. **Google Shopping (online products)** — sign up at [serpapi.com](https://serpapi.com/) (has a

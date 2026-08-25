@@ -52,6 +52,15 @@ export interface GeneratedModel {
   source: "mock" | "real";
 }
 
+export interface SavedLook {
+  id: string;
+  name: string;
+  savedAt: string;
+  profile: StyleProfile;
+  cartItems: CartItem[];
+  model: GeneratedModel;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";

@@ -9,6 +9,7 @@ import AlternativesPanel from "../components/AlternativesPanel";
 import CartSidebar from "../components/CartSidebar";
 import ChatAddBox from "../components/ChatAddBox";
 import CheckoutFlow from "../components/CheckoutFlow";
+import SavedLooksPanel from "../components/SavedLooksPanel";
 
 export default function Home() {
   const {
@@ -17,6 +18,7 @@ export default function Home() {
     generatedModel,
     chatMessages,
     isGenerating,
+    savedLooks,
     setProfile,
     addItem,
     removeItem,
@@ -25,6 +27,10 @@ export default function Home() {
     setGeneratedModel,
     setGenerating,
     addChatMessage,
+    saveLook,
+    loadLook,
+    deleteLook,
+    renameLook,
   } = useAppStore();
 
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
@@ -126,6 +132,10 @@ export default function Home() {
     await syncModel(styleProfile, next);
   }
 
+  function handleSaveLook() {
+    saveLook();
+  }
+
   return (
     <main className="mx-auto max-w-6xl p-6">
       <header>
@@ -159,6 +169,14 @@ export default function Home() {
             isBusy={isChatBusy}
             onSendMessage={handleSendChat}
             onAddProduct={handleAddFromChat}
+          />
+          <SavedLooksPanel
+            savedLooks={savedLooks}
+            canSave={Boolean(generatedModel) && !isGenerating}
+            onSave={handleSaveLook}
+            onLoad={loadLook}
+            onDelete={deleteLook}
+            onRename={renameLook}
           />
         </div>
       </div>

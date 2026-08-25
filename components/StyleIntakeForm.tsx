@@ -11,21 +11,21 @@ interface Props {
 
 export default function StyleIntakeForm({ initialProfile, isGenerating, onGenerate }: Props) {
   const [freeText, setFreeText] = useState(initialProfile.freeText);
-  const [occasion, setOccasion] = useState(initialProfile.occasion ?? "");
   const [region, setRegion] = useState(initialProfile.region ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!freeText.trim()) return;
-    onGenerate({ freeText: freeText.trim(), occasion: occasion.trim(), region: region.trim() });
+    onGenerate({ freeText: freeText.trim(), region: region.trim() });
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-sand bg-white/60 p-5 shadow-sm">
       <h2 className="font-display text-lg text-ink">Tell us about you</h2>
       <p className="mt-1 text-sm text-ink/60">
-        Write in plain English — body type, height/weight, ethnicity, any characteristics, and your
-        style preferences. The more detail, the better the recommendations.
+        Write in plain English — body type, height/weight, ethnicity, any characteristics, your
+        style preferences, and the occasion (e.g. office wear, a wedding, a casual weekend). The
+        more detail, the better the recommendations.
       </p>
       <textarea
         value={freeText}
@@ -34,18 +34,12 @@ export default function StyleIntakeForm({ initialProfile, isGenerating, onGenera
         rows={6}
         className="mt-3 w-full resize-none rounded-xl border border-sand bg-paper p-3 text-sm text-ink outline-none focus:border-accent"
       />
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <input
-          value={occasion}
-          onChange={(e) => setOccasion(e.target.value)}
-          placeholder="Occasion (e.g. office wear)"
-          className="rounded-xl border border-sand bg-paper p-2 text-sm outline-none focus:border-accent"
-        />
+      <div className="mt-3">
         <input
           value={region}
           onChange={(e) => setRegion(e.target.value)}
           placeholder="Region (e.g. India, US)"
-          className="rounded-xl border border-sand bg-paper p-2 text-sm outline-none focus:border-accent"
+          className="w-full rounded-xl border border-sand bg-paper p-2 text-sm outline-none focus:border-accent"
         />
       </div>
       <button

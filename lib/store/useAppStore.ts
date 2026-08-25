@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CartItem, ChatMessage, GeneratedModel, Product, Slot, StyleProfile } from "../types";
+import { CartItem, ChatMessage, GeneratedModel, Product, SavedLook, Slot, StyleProfile } from "../types";
 
 interface AppState {
   styleProfile: StyleProfile;
@@ -8,6 +8,7 @@ interface AppState {
   generatedModel: GeneratedModel | null;
   chatMessages: ChatMessage[];
   isGenerating: boolean;
+  savedLooks: SavedLook[];
 
   setProfile: (profile: StyleProfile) => void;
   addItem: (product: Product) => void;
@@ -18,6 +19,10 @@ interface AppState {
   setGeneratedModel: (model: GeneratedModel | null) => void;
   setGenerating: (value: boolean) => void;
   addChatMessage: (message: ChatMessage) => void;
+  saveLook: (name?: string) => void;
+  loadLook: (id: string) => void;
+  deleteLook: (id: string) => void;
+  renameLook: (id: string, name: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -28,6 +33,7 @@ export const useAppStore = create<AppState>()(
       generatedModel: null,
       chatMessages: [],
       isGenerating: false,
+      savedLooks: [],
 
       setProfile: (profile) => set({ styleProfile: profile }),
 
@@ -59,6 +65,41 @@ export const useAppStore = create<AppState>()(
 
       addChatMessage: (message) =>
         set((state) => ({ chatMessages: [...state.chatMessages, message] })),
+
+      saveLook: (name) =>
+        set((state) => {
+          if (!state.generatedModel) return state;
+          const look: SavedLook = {
+            id: `look_${Date.now()}`,
+            name: name?.trim() || `Look – ${new Date().toLocaleString()}`,
+            savedAt: new Date().toISOString(),
+            profile: state.styleProfile,
+            cartItems: state.cartItems,
+            model: state.generatedModel,
+          };
+          return { savedLooks: [look, ...state.savedLooks] };
+        }),
+
+      loadLook: (id) =>
+        set((state) => {
+          const look = state.savedLooks.find((l) => l.id === id);
+          if (!look) return state;
+          return {
+            styleProfile: look.profile,
+            cartItems: look.cartItems,
+            generatedModel: look.model,
+          };
+        }),
+
+      deleteLook: (id) =>
+        set((state) => ({ savedLooks: state.savedLooks.filter((l) => l.id !== id) })),
+
+      renameLook: (id, name) =>
+        set((state) => ({
+          savedLooks: state.savedLooks.map((l) =>
+            l.id === id && name.trim() ? { ...l, name: name.trim() } : l
+          ),
+        })),
     }),
     {
       name: "ai-styling-app-storage",
@@ -67,6 +108,7 @@ export const useAppStore = create<AppState>()(
         cartItems: state.cartItems,
         generatedModel: state.generatedModel,
         chatMessages: state.chatMessages,
+        savedLooks: state.savedLooks,
       }),
     }
   )

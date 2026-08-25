@@ -1,11 +1,5 @@
 import { CartItem, Slot, StyleProfile } from "../types";
-
-function describeOutfit(wornBySlot: Partial<Record<Slot, CartItem>>): string {
-  const pieces = Object.values(wornBySlot)
-    .filter((item): item is CartItem => Boolean(item))
-    .map((item) => item.name);
-  return pieces.length > 0 ? pieces.join(", ") : "a simple, stylish everyday outfit";
-}
+import { describeOutfitForPrompt } from "../outfitPromptDescription";
 
 /**
  * Deterministic hash so the same style profile always maps to the same
@@ -34,11 +28,11 @@ export async function generatePollinationsImage(
   profile: StyleProfile,
   wornBySlot: Partial<Record<Slot, CartItem>>
 ): Promise<string | null> {
-  const outfitDescription = describeOutfit(wornBySlot);
+  const outfitDescription = describeOutfitForPrompt(wornBySlot);
   const corePrompt = `Ultra-realistic professional fashion photography portrait of a person, styled like a polished Instagram fashion/style influencer. Person: ${
     profile.freeText || "a stylish adult model"
   }.${profile.occasion ? ` Styled for: ${profile.occasion}.` : ""} Full-body vertical portrait, soft natural studio lighting, shallow depth of field, confident editorial pose, clean minimal neutral background, photorealistic skin texture, high detail.`;
-  const prompt = `${corePrompt} They are wearing: ${outfitDescription}.`;
+  const prompt = `${corePrompt} They are wearing: ${outfitDescription}. Render each garment/accessory as closely as possible to its exact stated color, material, cut, and silhouette — these are real products, not generic placeholders.`;
 
   const seed = seedFromText(`${profile.freeText}|${profile.occasion ?? ""}`);
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(
@@ -46,7 +40,7 @@ export async function generatePollinationsImage(
   )}?width=768&height=1024&seed=${seed}&nologo=true&model=flux`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
+  const timeout = setTimeout(() => controller.abort(), 45000);
 
   try {
     const res = await fetch(url, { signal: controller.signal });
